@@ -1,6 +1,6 @@
 use super::BodyTranslator;
 use crate::{
-    ctx::{CloneMap, TranslationCtx},
+    ctx::TranslationCtx,
     translation::{
         fmir::{self, Branches, Expr, Terminator},
         specification::typing::{Term, TermKind, UnOp},
@@ -30,7 +30,6 @@ use creusot_rustc::{
 };
 use itertools::Itertools;
 use std::collections::HashMap;
-use why3::QName;
 
 // Translate the terminator of a basic block.
 // There isn't much that's special about this. The only subtlety is in how
@@ -71,6 +70,8 @@ impl<'tcx> BodyTranslator<'_, '_, 'tcx> {
                 }
 
                 let (fun_def_id, subst) = func_defid(func).expect("expected call with function");
+                let (fun_def_id, subst) =
+                    resolve_function(self.ctx, self.param_env(), fun_def_id, subst, span);
 
                 if let Some(param) = subst.get(0) &&
                     let GenericArgKind::Type(ty) = param.unpack() &&
@@ -144,7 +145,6 @@ impl<'tcx> BodyTranslator<'_, '_, 'tcx> {
                         kind: TermKind::Unary { op: UnOp::Neg, arg: box ass },
                     };
                 }
-                // let ass = ass.to_why(self.ctx, self.names, Some(self.body));
                 self.emit_statementf(fmir::Statement::Assertion(ass));
                 self.emit_terminator(mk_goto(*target))
             }
@@ -178,17 +178,16 @@ impl<'tcx> BodyTranslator<'_, '_, 'tcx> {
     }
 }
 
-pub fn get_func_name<'tcx>(
+pub fn resolve_function<'tcx>(
     ctx: &mut TranslationCtx<'_, 'tcx>,
-    names: &mut CloneMap<'tcx>,
+    param_env: ParamEnv<'tcx>,
     def_id: DefId,
     subst: SubstsRef<'tcx>,
     sp: Span,
-) -> QName {
+) -> (DefId, SubstsRef<'tcx>) {
     if let Some(it) = ctx.opt_associated_item(def_id) {
         if let ty::TraitContainer(id) = it.container {
-            let params = ctx.param_env(names.self_id);
-            let method = traits::resolve_assoc_item_opt(ctx.tcx, params, def_id, subst)
+            let method = traits::resolve_assoc_item_opt(ctx.tcx, param_env, def_id, subst)
                 .expect("could not find instance");
 
             ctx.translate(id);
@@ -202,7 +201,7 @@ pub fn get_func_name<'tcx>(
                 ctx.warn(sp, "calling an external function with no contract will yield an impossible precondition");
             }
 
-            return names.insert(method.0, method.1).qname(ctx.tcx, method.0);
+            return method;
         }
     }
 
@@ -214,7 +213,7 @@ pub fn get_func_name<'tcx>(
     }
     ctx.translate(def_id);
 
-    names.insert(def_id, subst).qname(ctx.tcx, def_id)
+    (def_id, subst)
 }
 
 // Try to extract a function defid from an operand

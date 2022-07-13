@@ -89,7 +89,7 @@ pub struct CloneMap<'tcx> {
     pub use_full_clones: bool,
 
     // DefId of the item which is cloning. Used for trait resolution
-    pub self_id: DefId,
+    self_id: DefId,
     // TODO: Push the graph into an opaque type with tight api boundary
     // Graph which is used to calculate the full clone set
     clone_graph: DiGraphMap<DepNode<'tcx>, IndexSet<(Kind, SymbolKind)>>,

@@ -5,20 +5,19 @@ use crate::{
     specification::typing::{Literal, Term},
     translation::{
         binop_to_binop,
-        function::{place::translate_rplace_inner, terminator::get_func_name},
+        function::{place::translate_rplace_inner},
         unop_to_unop,
     },
     util::item_qname,
 };
 use creusot_rustc::{
     hir::{def::DefKind, def_id::DefId},
-    middle::ty::{subst::SubstsRef, AdtDef, GenericArg, ParamEnv, Ty, TypeFoldable},
+    middle::ty::{subst::SubstsRef, AdtDef, GenericArg, ParamEnv, Ty, TyKind, TypeFoldable},
     smir::mir::{BasicBlock, BinOp, Body, Place, UnOp},
     span::{Span, Symbol, DUMMY_SP},
     target::abi::VariantIdx,
 };
 use indexmap::IndexMap;
-use rustc_middle::ty::TyKind;
 use rustc_type_ir::{IntTy, UintTy};
 use why3::{exp::Pattern, mlcfg, mlcfg::BlockId, Exp, QName};
 
@@ -95,7 +94,7 @@ impl<'tcx> Expr<'tcx> {
             }
             Expr::Call(id, subst, args) => {
                 let args: Vec<_> = args.into_iter().map(|a| a.to_why(ctx, names, body)).collect();
-                let fname = get_func_name(ctx, names, id, subst, DUMMY_SP);
+                let fname = names.insert(id, subst).qname(ctx.tcx, id);
                 Exp::Call(box Exp::impure_qvar(fname), args)
             }
             Expr::Constant(_) => todo!(),
