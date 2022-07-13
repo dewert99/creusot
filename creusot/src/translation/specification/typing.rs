@@ -23,7 +23,8 @@ use creusot_rustc::{
 pub use creusot_rustc::{middle::thir, smir::mir::Field};
 use itertools::Itertools;
 use log::*;
-use rustc_middle::ty::TypeFoldable;
+use rustc_middle::ty::{TypeFoldable, uint_ty, int_ty};
+use rustc_type_ir::{UintTy, IntTy};
 
 use super::PurityVisitor;
 
@@ -104,7 +105,11 @@ impl<'tcx> TypeFoldable<'tcx> for Literal {
 #[derive(Clone, Debug, Decodable, Encodable)]
 pub enum Literal {
     Bool(bool),
-    Int(u128, LitIntType),
+    Int(u128, IntTy),
+    Uint(u128, UintTy),
+    String(String),
+    ZST,
+    Function,
 }
 
 #[derive(Clone, Debug, TyDecodable, TyEncodable, TypeFoldable)]
@@ -226,7 +231,15 @@ impl<'a, 'tcx> ThirTerm<'a, 'tcx> {
             ExprKind::Literal { lit, .. } => {
                 let lit = match lit.node {
                     LitKind::Bool(b) => Literal::Bool(b),
-                    LitKind::Int(u, s) => Literal::Int(u, s),
+                    LitKind::Int(u, lty) => match lty {
+                        LitIntType::Signed(ity) => Literal::Int(u, int_ty(ity)),
+                        LitIntType::Unsigned(uty) => Literal::Uint(u, uint_ty(uty)),
+                        LitIntType::Unsuffixed => match ty.kind() {
+                            TyKind::Int(ity) => Literal::Int(u, *ity),
+                            TyKind::Uint(uty) => Literal::Uint(u, *uty),
+                            _ => unreachable!(),
+                        },
+                    },
                     _ => unimplemented!("Unsupported literal"),
                 };
                 Ok(Term { ty, span, kind: TermKind::Lit(lit) })

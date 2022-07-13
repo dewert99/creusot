@@ -1,3 +1,10 @@
+use crate::{
+    clone_map::CloneMap,
+    ctx::{module_name, CloneSummary, TranslationCtx},
+    traits::resolve_assoc_item_opt,
+    translation::specification::typing::Literal,
+    util::get_builtin,
+};
 use creusot_rustc::{
     hir::def_id::DefId,
     middle::{
@@ -12,14 +19,6 @@ use why3::{
     declaration::Module,
     exp::{Constant, Exp},
     QName,
-};
-
-use crate::{
-    clone_map::CloneMap,
-    ctx::{module_name, CloneSummary, TranslationCtx},
-    traits::resolve_assoc_item_opt,
-    translation::ty,
-    util::get_builtin,
 };
 
 use super::fmir::Expr;
@@ -68,7 +67,7 @@ pub fn from_mir_constant_kind<'tcx>(
         }
     }
 
-    return Expr::Exp(try_to_bits(ctx, names, env, ck.ty(), span, ck));
+    return Expr::Constant(try_to_bits2(ctx, names, env, ck.ty(), span, ck));
 }
 
 pub fn from_ty_const<'tcx>(
@@ -95,84 +94,36 @@ pub fn from_ty_const<'tcx>(
         ctx.crash_and_error(span, "const generic parameters are not yet supported");
     }
 
-    return Expr::Exp(try_to_bits(ctx, names, env, c.ty(), span, c));
+    return Expr::Constant(try_to_bits2(ctx, names, env, c.ty(), span, c));
 }
 
-fn try_to_bits<'tcx, C: ToBits<'tcx>>(
+fn try_to_bits2<'tcx, C: ToBits<'tcx>>(
     ctx: &mut TranslationCtx<'_, 'tcx>,
     names: &mut CloneMap<'tcx>,
     env: ParamEnv<'tcx>,
     ty: Ty<'tcx>,
     span: Span,
     c: C,
-) -> Exp {
-    use creusot_rustc::{
-        middle::ty::{IntTy::*, UintTy::*},
-        type_ir::sty::TyKind::{Bool, FnDef, Int, Uint},
-    };
-    let why3_ty = ty::translate_ty(ctx, names, span, ty);
+) -> Literal {
+    use rustc_type_ir::sty::TyKind::{Bool, FnDef, Int, Uint};
     match ty.kind() {
-        Int(I128) => {
-            let bits = c.get_bits(ctx.tcx, env, ty);
-            Exp::Const(Constant::Int(bits.unwrap() as i128, Some(why3_ty)))
+        Int(ity) => {
+            let bits = c.get_bits(ctx.tcx, env, ty).unwrap();
+
+            Literal::Int(bits, *ity)
         }
-        Int(I64) => {
-            let bits = c.get_bits(ctx.tcx, env, ty);
-            Exp::Const(Constant::Int(bits.unwrap() as i64 as i128, Some(why3_ty)))
+        Uint(uty) => {
+            let bits = c.get_bits(ctx.tcx, env, ty).unwrap();
+
+            Literal::Uint(bits, *uty)
         }
-        Int(Isize) => {
-            let bits = c.get_bits(ctx.tcx, env, ty);
-            Exp::Const(Constant::Uint(bits.unwrap() as isize as u128, Some(why3_ty)))
-        }
-        Int(I32) => {
-            let bits = c.get_bits(ctx.tcx, env, ty);
-            Exp::Const(Constant::Int(bits.unwrap() as i32 as i128, Some(why3_ty)))
-        }
-        Int(I16) => {
-            let bits = c.get_bits(ctx.tcx, env, ty);
-            Exp::Const(Constant::Int(bits.unwrap() as i16 as i128, Some(why3_ty)))
-        }
-        Int(I8) => {
-            let bits = c.get_bits(ctx.tcx, env, ty);
-            Exp::Const(Constant::Int(bits.unwrap() as i8 as i128, Some(why3_ty)))
-        }
-        Uint(U128) => {
-            let bits = c.get_bits(ctx.tcx, env, ty);
-            Exp::Const(Constant::Uint(bits.unwrap(), Some(why3_ty)))
-        }
-        Uint(Usize) => {
-            let bits = c.get_bits(ctx.tcx, env, ty);
-            Exp::Const(Constant::Uint(bits.unwrap() as usize as u128, Some(why3_ty)))
-        }
-        Uint(U64) => {
-            let bits = c.get_bits(ctx.tcx, env, ty);
-            Exp::Const(Constant::Uint(bits.unwrap() as u64 as u128, Some(why3_ty)))
-        }
-        Uint(U32) => {
-            let bits = c.get_bits(ctx.tcx, env, ty);
-            Exp::Const(Constant::Uint(bits.unwrap() as u32 as u128, Some(why3_ty)))
-        }
-        Uint(U16) => {
-            let bits = c.get_bits(ctx.tcx, env, ty);
-            Exp::Const(Constant::Uint(bits.unwrap() as u16 as u128, Some(why3_ty)))
-        }
-        Uint(U8) => {
-            let bits = c.get_bits(ctx.tcx, env, ty);
-            Exp::Const(Constant::Uint(bits.unwrap() as u8 as u128, Some(why3_ty)))
-        }
-        Bool => {
-            if c.get_bits(ctx.tcx, env, ty) == Some(1) {
-                Exp::mk_true()
-            } else {
-                Exp::mk_false()
-            }
-        }
-        _ if ty.is_unit() => Exp::Tuple(Vec::new()),
+        Bool => Literal::Bool(c.get_bits(ctx.tcx, env, ty) == Some(1)),
+        _ if ty.is_unit() => Literal::ZST,
         FnDef(def_id, subst) => {
             let method =
                 resolve_assoc_item_opt(ctx.tcx, env, *def_id, subst).unwrap_or((*def_id, subst));
             names.insert(method.0, method.1);
-            Exp::Tuple(Vec::new())
+            Literal::Function
         }
         _ => {
             ctx.crash_and_error(

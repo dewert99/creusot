@@ -74,6 +74,13 @@ impl<'tcx> Lower<'_, '_, 'tcx> {
 
                         match term.ty.kind() {
                             TyKind::Int(_) => Constant::Int(u as i128, Some(ty)),
+                            _ => unreachable!(),
+                        }
+                    }
+                    Literal::Uint(u, _) => {
+                        let ty = translate_ty(self.ctx, self.names, creusot_rustc::span::DUMMY_SP, term.ty);
+
+                        match term.ty.kind() {
                             TyKind::Uint(_) => Constant::Uint(u, Some(ty)),
                             _ => unreachable!(),
                         }
@@ -85,6 +92,7 @@ impl<'tcx> Lower<'_, '_, 'tcx> {
                             Constant::const_false()
                         }
                     }
+                    _ => unimplemented!(),
                 };
                 Exp::Const(c)
             }
