@@ -7,6 +7,7 @@ pub mod ord;
 mod resolve;
 mod seq;
 mod set;
+mod fset;
 pub mod well_founded;
 
 pub use fset::*;
@@ -18,4 +19,5 @@ pub use ord::*;
 pub use resolve::*;
 pub use seq::*;
 pub use set::*;
+pub use fset::*;
 pub use well_founded::*;

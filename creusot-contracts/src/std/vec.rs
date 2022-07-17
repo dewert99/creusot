@@ -36,6 +36,7 @@ extern_spec! {
 
             impl<T, A : Allocator> Vec<T, A> {
                 #[ensures(@result == (@*self).len())]
+                #[ensures(@result <= @usize::MAX)]
                 fn len(&self) -> usize;
 
                 #[ensures(@^self == (@*self).push(v))]
