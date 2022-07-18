@@ -1,0 +1,111 @@
+module Type
+  use Ref
+  use mach.int.Int
+  use prelude.Int8
+  use prelude.Int16
+  use mach.int.Int32
+  use mach.int.Int64
+  use prelude.UInt8
+  use prelude.UInt16
+  use mach.int.UInt32
+  use mach.int.UInt64
+  use string.Char
+  use floating_point.Single
+  use floating_point.Double
+  use seq.Seq
+  use set.Set
+  use prelude.Prelude
+end
+module C487_Test_Closure0_Interface
+  use prelude.Prelude
+  use mach.int.Int
+  use mach.int.UInt32
+  type c487_test_closure0  =
+    | C487_Test_Closure0
+
+  predicate precondition [@cfg:stackify] (_1' : c487_test_closure0) (x : (uint32, uint32)) =
+    true
+  predicate postcondition [@cfg:stackify] (_1' : c487_test_closure0) (x : (uint32, uint32)) (result : uint32) =
+    true
+  predicate postcondition_mut [@cfg:stackify] (_1' : borrowed c487_test_closure0) (x : (uint32, uint32)) (result : uint32)
+
+   =
+    true
+  predicate postcondition_once [@cfg:stackify] (_1' : c487_test_closure0) (x : (uint32, uint32)) (result : uint32) =
+    true
+  predicate resolve (_1' : c487_test_closure0) =
+    true
+  val c487_Test_Closure0 [@cfg:stackify] (_1' : c487_test_closure0) (x : (uint32, uint32)) : uint32
+end
+module C487_Test_Closure0
+  type c487_test_closure0  =
+    | C487_Test_Closure0
+
+  use prelude.Prelude
+  use mach.int.Int
+  use mach.int.UInt32
+  let rec cfg c487_Test_Closure0 [@cfg:stackify] [#"../487.rs" 8 8 8 30] (_1' : c487_test_closure0) (x : (uint32, uint32)) : uint32
+
+   = [@vc:do_not_keep_trace] [@vc:sp]
+  var _0 : uint32;
+  var _1 : c487_test_closure0;
+  var x_2 : uint32;
+  var y_3 : uint32;
+  var _4 : uint32;
+  var _5 : uint32;
+  {
+    _1 <- _1';
+    x_2 <- x;
+    y_3 <- y;
+    goto BB0
+  }
+  BB0 {
+    _4 <- x_2;
+    _5 <- y_3;
+    _0 <- ([#"../487.rs" 8 25 8 30] _4 + _5);
+    return _0
+  }
+
+end
+module CreusotContracts_Logic_Resolve_Impl2_Resolve_Interface
+  type t
+  predicate resolve (self : t)
+end
+module CreusotContracts_Logic_Resolve_Impl2_Resolve
+  type t
+  predicate resolve (self : t) =
+    true
+end
+module C487_Test_Interface
+  val test [@cfg:stackify] (_ : ()) : ()
+end
+module C487_Test
+  use mach.int.UInt32
+  use mach.int.Int
+  use mach.int.Int32
+  use prelude.Prelude
+  clone C487_Test_Closure0_Interface as Closure00 with axiom .
+  let rec cfg test [@cfg:stackify] [#"../487.rs" 4 0 4 13] (_ : ()) : () = [@vc:do_not_keep_trace] [@vc:sp]
+  var _0 : ();
+  var c_1 : Closure00.c487_test_closure0;
+  var z_2 : uint32;
+  var _3 : Closure00.c487_test_closure0;
+  var _4 : (uint32, uint32);
+  {
+    goto BB0
+  }
+  BB0 {
+    c_1 <- Closure00.C487_Test_Closure0;
+    _3 <- c_1;
+    assume { Closure00.resolve c_1 };
+    _4 <- ((2 : uint32), (3 : uint32));
+    z_2 <- ([#"../487.rs" 10 12 10 19] Closure00.c487_Test_Closure0 _3 _4);
+    goto BB1
+  }
+  BB1 {
+    assert { [#"../487.rs" 11 18 11 25] UInt32.to_int z_2 = 5 };
+    _0 <- ();
+    return _0
+  }
+  
+end
