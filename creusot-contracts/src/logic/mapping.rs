@@ -25,4 +25,11 @@ impl<A, B> Mapping<A, B> {
     pub fn cst(_: B) -> Self {
         absurd
     }
+
+    #[trusted]
+    #[logic]
+    #[creusot::builtins = "map.MapExt.(==)"]
+    pub fn ext_eq(self, _: Self) -> bool {
+        absurd
+    }
 }
