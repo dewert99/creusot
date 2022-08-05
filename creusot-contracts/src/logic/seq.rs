@@ -48,21 +48,25 @@ impl<T> Seq<T> {
     }
 
     #[logic]
+    #[why3::attr = "inline:trivial"]
     pub fn tail(self) -> Self {
         self.subsequence(1, self.len())
     }
 
     #[logic]
+    #[why3::attr = "inline:trivial"]
     pub fn upto_last(self) -> Seq<T> {
         self.subsequence(0, self.len() - 1)
     }
 
     #[logic]
+    #[why3::attr = "inline:trivial"]
     pub fn last(self) -> T {
         self[self.len() - 1]
     }
 
     #[logic]
+    #[why3::attr = "inline:trivial"]
     pub fn head(self) -> T {
         self[0]
     }
