@@ -74,4 +74,11 @@ impl<T: ?Sized> FSet<T> {
     {
         pearlite! { absurd }
     }
+
+    #[trusted]
+    #[logic]
+    #[creusot::builtins = "set.Fset.(==)"]
+    pub fn ext_eq(self, _: Self) -> bool {
+        absurd
+    }
 }

@@ -57,4 +57,11 @@ impl<T: ?Sized> Set<T> {
     pub fn union(self, _: Self) -> Self {
         pearlite! { absurd}
     }
+
+    #[trusted]
+    #[logic]
+    #[creusot::builtins = "set.Set.(==)"]
+    pub fn ext_eq(self, _: Self) -> bool {
+        absurd
+    }
 }
