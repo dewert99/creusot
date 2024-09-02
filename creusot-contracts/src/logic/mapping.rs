@@ -1,9 +1,9 @@
 use crate::*;
 
 #[cfg_attr(creusot, creusot::builtins = "map.Map.map")]
-pub struct Mapping<A, B>(std::marker::PhantomData<(A, B)>);
+pub struct Mapping<A: ?Sized, B>(std::marker::PhantomData<A>, std::marker::PhantomData<B>);
 
-impl<A, B> Mapping<A, B> {
+impl<A: ?Sized, B> Mapping<A, B> {
     #[trusted]
     #[logic]
     #[open(self)]

@@ -1,0 +1,12 @@
+module Set
+
+  use map.Map
+  use map.Const
+
+  type set 'a = map 'a bool
+
+  (** if `'a` is an infinite type, then `set 'a` is infinite *)
+  meta "material_type_arg" type set, 0
+
+  constant empty [@inline:trivial] : set 'a = const false
+end
