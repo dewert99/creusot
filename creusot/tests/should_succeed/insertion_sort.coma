@@ -169,7 +169,7 @@ module InsertionSort_InsertionSort
   
   let%span span55 = "../../../../creusot-contracts/src/model.rs" 90 8 90 31
   
-  let%span span56 = "../../../../creusot-contracts/src/snapshot.rs" 28 20 28 48
+  let%span span56 = "../../../../creusot-contracts/src/snapshot.rs" 27 20 27 48
   
   let%span span57 = "../../../../creusot-contracts/src/std/iter.rs" 80 8 80 19
   
@@ -464,8 +464,7 @@ module InsertionSort_InsertionSort
           | s2 = bb13 ]
           
         | bb13 = s0
-          [ s0 =  [ &produced <- _28 ] 
-            (any [ any_ (_any:Snapshot.snap_ty (Seq.seq usize))-> (!  [ &_28 <- _any ] s1) ] )
+          [ s0 =  [ &produced <- _28 ] s1
           | s1 =  [ &i <- __creusot_proc_iter_elem ] s2
           | s2 =  [ &j <- i ] s3
           | s3 = bb14 ]

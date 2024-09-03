@@ -158,15 +158,15 @@ module Vecdeque_TestDeque
   
   let%span span19 = "" 0 0 0 0
   
-  let%span span20 = "../../../../creusot-contracts/src/std/deque.rs" 12 21 12 25
+  let%span span20 = "../../../../creusot-contracts/src/std/deque.rs" 15 21 15 25
   
-  let%span span21 = "../../../../creusot-contracts/src/std/deque.rs" 11 14 11 41
+  let%span span21 = "../../../../creusot-contracts/src/std/deque.rs" 14 14 14 41
   
-  let%span span22 = "../../../../creusot-contracts/src/std/deque.rs" 12 4 12 36
+  let%span span22 = "../../../../creusot-contracts/src/std/deque.rs" 15 4 15 36
   
   let%span span23 = "" 0 0 0 0
   
-  let%span span24 = "../../../../creusot-contracts/src/std/deque.rs" 76 26 76 45
+  let%span span24 = "../../../../creusot-contracts/src/std/deque.rs" 88 26 88 45
   
   let%span span25 = "../../../../creusot-contracts/src/model.rs" 108 8 108 31
   
@@ -174,19 +174,19 @@ module Vecdeque_TestDeque
   
   let%span span27 = "" 0 0 0 0
   
-  let%span span28 = "../../../../creusot-contracts/src/std/deque.rs" 103 26 103 55
+  let%span span28 = "../../../../creusot-contracts/src/std/deque.rs" 115 26 115 55
   
   let%span span29 = "" 0 0 0 0
   
   let%span span30 = "" 0 0 0 0
   
-  let%span span31 = "../../../../creusot-contracts/src/std/deque.rs" 98 26 98 59
+  let%span span31 = "../../../../creusot-contracts/src/std/deque.rs" 110 26 110 59
   
-  let%span span32 = "../../../../creusot-contracts/src/std/deque.rs" 99 26 99 73
+  let%span span32 = "../../../../creusot-contracts/src/std/deque.rs" 111 26 111 73
   
   let%span span33 = "" 0 0 0 0
   
-  let%span span34 = "../../../../creusot-contracts/src/std/deque.rs" 89 26 94 17
+  let%span span34 = "../../../../creusot-contracts/src/std/deque.rs" 101 26 106 17
   
   let%span span35 = "" 0 0 0 0
   
@@ -204,23 +204,23 @@ module Vecdeque_TestDeque
   
   let%span span42 = "" 0 0 0 0
   
-  let%span span43 = "../../../../creusot-contracts/src/std/deque.rs" 80 26 85 17
+  let%span span43 = "../../../../creusot-contracts/src/std/deque.rs" 92 26 97 17
   
   let%span span44 = "" 0 0 0 0
   
-  let%span span45 = "../../../../creusot-contracts/src/std/deque.rs" 58 26 58 44
+  let%span span45 = "../../../../creusot-contracts/src/std/deque.rs" 70 26 70 44
   
   let%span span46 = "../../../../creusot-contracts/src/model.rs" 90 8 90 31
   
   let%span span47 = "" 0 0 0 0
   
-  let%span span48 = "../../../../creusot-contracts/src/std/deque.rs" 68 26 68 48
+  let%span span48 = "../../../../creusot-contracts/src/std/deque.rs" 80 26 80 48
   
   let%span span49 = "" 0 0 0 0
   
-  let%span span50 = "../../../../creusot-contracts/src/std/deque.rs" 72 26 72 54
+  let%span span50 = "../../../../creusot-contracts/src/std/deque.rs" 84 26 84 54
   
-  let%span span51 = "../../../../creusot-contracts/src/std/deque.rs" 62 26 62 44
+  let%span span51 = "../../../../creusot-contracts/src/std/deque.rs" 74 26 74 44
   
   use prelude.prelude.UInt32
   
@@ -441,8 +441,7 @@ module Vecdeque_TestDeque
     | bb2 = any [ br0 -> {_3 = false} (! bb4) | br1 -> {_3} (! bb3) ] 
     | bb3 = s0 [ s0 = len'0 {deque} (fun (_ret':usize) ->  [ &_8 <- _ret' ] s1) | s1 = bb5 ] 
     | bb5 = s0
-      [ s0 = UIntSize.eq {_8} {[%#svecdeque1] (0 : usize)}
-          (fun (_ret':bool) ->  [ &_7 <- _ret' ] (any [ any_ (_any:usize)-> (!  [ &_8 <- _any ] s1) ] ))
+      [ s0 = UIntSize.eq {_8} {[%#svecdeque1] (0 : usize)} (fun (_ret':bool) ->  [ &_7 <- _ret' ] s1)
       | s1 = any [ br0 -> {_7 = false} (! bb7) | br1 -> {_7} (! bb6) ]  ]
       
     | bb6 = s0
@@ -454,8 +453,7 @@ module Vecdeque_TestDeque
     | bb9 = any [ br0 -> {_13 = false} (! bb11) | br1 -> {_13} (! bb10) ] 
     | bb10 = s0 [ s0 = len'0 {deque1} (fun (_ret':usize) ->  [ &_18 <- _ret' ] s1) | s1 = bb12 ] 
     | bb12 = s0
-      [ s0 = UIntSize.eq {_18} {[%#svecdeque3] (0 : usize)}
-          (fun (_ret':bool) ->  [ &_17 <- _ret' ] (any [ any_ (_any:usize)-> (!  [ &_18 <- _any ] s1) ] ))
+      [ s0 = UIntSize.eq {_18} {[%#svecdeque3] (0 : usize)} (fun (_ret':bool) ->  [ &_17 <- _ret' ] s1)
       | s1 = any [ br0 -> {_17 = false} (! bb14) | br1 -> {_17} (! bb13) ]  ]
       
     | bb13 = s0
