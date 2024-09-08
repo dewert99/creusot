@@ -18,7 +18,7 @@ use crate::{
 };
 use itertools::Itertools;
 use log::*;
-use rustc_ast::{visit::VisitorResult, LitIntType, LitKind};
+use rustc_ast::{visit::VisitorResult, ByRef, LitIntType, LitKind, Mutability};
 use rustc_hir::{
     def_id::{DefId, LocalDefId},
     HirId, OwnerId,
@@ -307,7 +307,7 @@ impl<'a, 'tcx> ThirTerm<'a, 'tcx> {
             .iter()
             .enumerate()
             .filter_map(|(idx, param)| {
-                Some(self.pattern_term(&*param.pat.as_ref()?).map(|pat| (idx, param.ty, pat)))
+                Some(self.pattern_term(&*param.pat.as_ref()?, true).map(|pat| (idx, param.ty, pat)))
             })
             .fold_ok(body, |body, (idx, ty, pattern)| match pattern {
                 Pattern::Binder(_) | Pattern::Wildcard => body,
@@ -731,21 +731,32 @@ impl<'a, 'tcx> ThirTerm<'a, 'tcx> {
             return Err(Error::new(arm.span, "match guards are unsupported"));
         }
 
-        let pattern = self.pattern_term(&arm.pattern)?;
+        let pattern = self.pattern_term(&arm.pattern, false)?;
         let body = self.expr_term(arm.body)?;
 
         Ok((pattern, body))
     }
 
-    fn pattern_term(&self, pat: &Pat<'tcx>) -> CreusotResult<Pattern<'tcx>> {
+    fn pattern_term(&self, pat: &Pat<'tcx>, mut_allowed: bool) -> CreusotResult<Pattern<'tcx>> {
         trace!("{:?}", pat);
         match &pat.kind {
             PatKind::Wild => Ok(Pattern::Wildcard),
-            PatKind::Binding { name, .. } => Ok(Pattern::Binder(*name)),
+            PatKind::Binding { name, mode, .. } => {
+                if mode.0 == ByRef::Yes(Mutability::Mut) {
+                    return Err(Error::new(
+                        pat.span,
+                        "mut ref binders are not supported in pearlite",
+                    ));
+                }
+                if !mut_allowed && mode.1 == Mutability::Mut {
+                    return Err(Error::new(pat.span, "mut binders are not supported in pearlite"));
+                }
+                Ok(Pattern::Binder(*name))
+            }
             PatKind::Variant { subpatterns, adt_def, variant_index, args, .. } => {
                 let mut fields: Vec<_> = subpatterns
                     .iter()
-                    .map(|pat| Ok((pat.field, self.pattern_term(&pat.pattern)?)))
+                    .map(|pat| Ok((pat.field, self.pattern_term(&pat.pattern, mut_allowed)?)))
                     .collect::<Result<_, Error>>()?;
                 fields.sort_by_key(|f| f.0);
 
@@ -766,7 +777,7 @@ impl<'a, 'tcx> ThirTerm<'a, 'tcx> {
             PatKind::Leaf { subpatterns } => {
                 let mut fields: Vec<_> = subpatterns
                     .iter()
-                    .map(|pat| Ok((pat.field, self.pattern_term(&pat.pattern)?)))
+                    .map(|pat| Ok((pat.field, self.pattern_term(&pat.pattern, mut_allowed)?)))
                     .collect::<Result<_, Error>>()?;
                 fields.sort_by_key(|f| f.0);
 
@@ -802,7 +813,7 @@ impl<'a, 'tcx> ThirTerm<'a, 'tcx> {
                     ));
                 }
 
-                self.pattern_term(subpattern)
+                self.pattern_term(subpattern, mut_allowed)
             }
             PatKind::Constant { value } => {
                 if !pat.ty.is_bool() {
@@ -839,7 +850,7 @@ impl<'a, 'tcx> ThirTerm<'a, 'tcx> {
                 })
             }
             StmtKind::Let { pattern, initializer, init_scope, .. } => {
-                let pattern = self.pattern_term(pattern)?;
+                let pattern = self.pattern_term(pattern, false)?;
                 if let Some(initializer) = initializer {
                     let initializer = self.expr_term(*initializer)?;
                     let span =
@@ -1226,7 +1237,10 @@ pub fn super_visit_term<'tcx, V: TermVisitor<'tcx>>(term: &Term<'tcx>, visitor: 
             visitor.visit_term(&*rhs);
         }
         TermKind::Unary { op: _, arg } => visitor.visit_term(&*arg),
-        TermKind::Quant { body, .. } => visitor.visit_term(&*body),
+        TermKind::Quant { body, trigger, .. } => {
+            trigger.iter().flat_map(|x| &x.0).for_each(|x| visitor.visit_term(x));
+            visitor.visit_term(&*body)
+        }
         TermKind::Call { id: _, subst: _, args } => {
             args.iter().for_each(|a| visitor.visit_term(&*a))
         }
@@ -1279,7 +1293,10 @@ pub(crate) fn super_visit_mut_term<'tcx, V: TermVisitorMut<'tcx>>(
             visitor.visit_mut_term(&mut *rhs);
         }
         TermKind::Unary { op: _, arg } => visitor.visit_mut_term(&mut *arg),
-        TermKind::Quant { body, .. } => visitor.visit_mut_term(&mut *body),
+        TermKind::Quant { body, trigger, .. } => {
+            trigger.iter_mut().flat_map(|x| &mut x.0).for_each(|x| visitor.visit_mut_term(x));
+            visitor.visit_mut_term(&mut *body)
+        }
         TermKind::Call { id: _, subst: _, args } => {
             args.iter_mut().for_each(|a| visitor.visit_mut_term(&mut *a))
         }
